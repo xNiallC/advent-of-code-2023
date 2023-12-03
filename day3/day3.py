@@ -1,4 +1,6 @@
 from curses.ascii import isdigit
+from re import I
+from tabnanny import filename_only
 from boilerplate.initialise_input import InitialiseInput
 
 
@@ -8,7 +10,6 @@ def main():
 
     number_tracker = []
     symbol_tracker = []
-
     valid_numbers = []
 
     for line_index, line in enumerate(engine_schematics):
@@ -34,36 +35,40 @@ def main():
                     tracking_number = ""
                     tracking_number_indexes = []
 
-    # If a number in the number tracker is adjacent, above, below, or diagonal to a symbol in the symbol tracker, it is valid
-    # As numbers span multiple Y values, we need to compare the symbol Y to any of the number Ys
-    for number in number_tracker:
-        using_number = number[0]
-        number_x = number[1]
-        number_ys = number[2]
+    # Iterate each symbol in symbol tracker
+    # If the symbol is a *
+    # If the hash has TWO numbers in the number tracker that are adjacent, above, below, or diagonally adjacent
+    # Multiply the two numbers together and add to a list of valid numbers
+    for symbol in symbol_tracker:
+        symbol_value = symbol[0]
+        symbol_x = symbol[1]
+        symbol_y = symbol[2]
 
-        for symbol in symbol_tracker:
-            symbol_x = symbol[1]
-            symbol_y = symbol[2]
+        if symbol_value == "*":
+            adjacent_numbers = []
+            for number in number_tracker:
+                number_value = number[0]
+                number_x = number[1]
+                number_ys = number[2]
 
-            # If the symbol and the number are on the same line, we see if the symbols Y value is between -1 and 1 of the numbers Y value
-            # if the symbol is on the line above the number, or the line below the number, we see if the symbols Y value is between -1 and 1 of the numbers Y value
-            if (
-                symbol_x == number_x
-                or symbol_x == number_x - 1
-                or symbol_x == number_x + 1
-            ):
-                lower_y_bound = number_ys[0] - 1
-                upper_y_bound = number_ys[-1] + 1
-                if symbol_y >= lower_y_bound and symbol_y <= upper_y_bound:
-                    valid_numbers.append(using_number)
-                    break
+                if (
+                    symbol_x >= number_x - 1 and symbol_x <= number_x + 1
+                ):
+                    for number_y in number_ys:
+                        if (
+                            symbol_y >= number_y - 1 and symbol_y <= number_y + 1
+                        ):
+                            if number_value not in adjacent_numbers:
+                                adjacent_numbers.append(number_value)
 
-    final_number = 0
-    for valid_number in valid_numbers:
-        final_number += int(valid_number)
+            if len(adjacent_numbers) == 2:
+                valid_numbers.append(adjacent_numbers)
 
-    print(final_number)
+    final_value = 0
+    for number_pair in valid_numbers:
+        final_value += (int(number_pair[0]) * int(number_pair[1]))
 
+    print(final_value)
 
 if __name__ == "__main__":
     main()
